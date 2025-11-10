@@ -1,12 +1,11 @@
-@extends('layout.default')
-@section('content')
-    @include('include.nav')
-    @if($tasks->isNotEmpty())
-        <div class="d-flex flex-wrap">
-            @foreach($tasks as $task)
-                @include('include.task')
-            @endforeach
-        </div>
-        {{ $tasks->links('include.paginate') }}
-    @endif
-@endsection
+<x-layout :$title>
+	<x-general.nav.container/>
+	@if($tasks->isNotEmpty())
+		<div class="d-flex flex-wrap mb-4">
+			@foreach($tasks as $task)
+				<x-task.item :$task/>
+			@endforeach
+		</div>
+		{{ $tasks->links('pagination::bootstrap-5') }}
+	@endif
+</x-layout>

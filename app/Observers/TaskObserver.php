@@ -3,20 +3,17 @@
 namespace App\Observers;
 
 use App\Models\Task;
-use App\Notifications\TaskNew;
+use App\Notifications\NewTask;
 
 class TaskObserver
 {
     /**
      * Handle the Task "created" event.
-     *
-     * @param Task $task
-     * @return void
      */
     public function created(Task $task): void
     {
-        if ($task->user->id !== auth()->user()->getAuthIdentifier()) {
-            $task->user->notify(new TaskNew(auth()->user(), $task));
+        if ($task->user_id !== auth()->id()) {
+            $task->user->notify(new NewTask(auth()->user(), $task));
         }
     }
 }

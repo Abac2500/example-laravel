@@ -4,30 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class TaskController extends Controller
 {
     /**
      * Вывод списка задач.
      *
-     * @param Request $request
-     * @param User $user
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
+     * @param string $view
+     * @return View
      */
-    public function index(string $view)
+    public function index(string $view): View
     {
-        switch ($view) {
-            case 'all':
-                $tasks = new Task();
-                break;
-            case 'user':
-                $tasks = auth()->user()->tasks();
-                break;
-        }
-        $tasks = $tasks->orderByDesc('expiration_at')->paginate(5);
-
         $title = 'Список задач';
+
+        $tasks = match ($view) {
+            'all' => new Task(),
+            'user' => auth()->user()->tasks(),
+        };
+        $tasks = $tasks
+            ->orderByDesc('expiration_at')
+            ->paginate(5);
 
         return view('page.task.index', compact('tasks', 'title'));
     }
@@ -35,70 +36,62 @@ class TaskController extends Controller
     /**
      * Редактирование или создание задачи.
      *
-     * @param Request $request
-     * @param Task $task
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param Task|null $task
+     * @return View
      */
-    public function manage(Request $request, Task $task)
+    public function store(?Task $task): View
     {
-        $has = $request->route()->hasParameter('task');
-        if ($has) {
-            $this->authorize('update', $task);
+        $title = 'Новая задача';
+        if ($task?->id) {
+            Gate::authorize('update', $task);
+            $title = "Редактирование - $task->name";
         }
+
         $users = User::all();
 
-        $title = $has ? "Редактирование - " . $task->name : 'Новая задача';
-
-        return view('page.task.manage', compact('task', 'users', 'title'));
+        return view('page.task.store', compact('task', 'users', 'title'));
     }
 
     /**
      * Сохранение задачи.
      *
      * @param Request $request
-     * @param Task $task
-     * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @param Task|null $task
+     * @return RedirectResponse
      */
-    public function save(Request $request, Task $task)
+    public function save(Request $request, ?Task $task): RedirectResponse
     {
-        $has = $request->route()->hasParameter('task');
-        if ($has) {
-            $this->authorize('update', $task);
+        if ($task?->id) {
+            Gate::authorize('update', $task);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'text' => 'required|string|max:1024',
             'user_id' => 'required|integer|exists:App\Models\User,id',
-            'expiration_at' => 'required|date'
+            'expiration_at' => 'required|date',
         ], [], [
             'name' => 'Название',
             'text' => 'Описание',
             'user' => 'Исполнитель',
-            'expiration_at' => 'Дата окончания срока'
+            'expiration_at' => 'Дата окончания срока',
         ]);
 
-        if (!$has) {
-            $task = new Task();
-        }
-        $task->name = $request->name;
-        $task->text = $request->text;
-        $task->user_id = $request->user_id;
-        $task->expiration_at = $request->expiration_at;
+        $task ??= new Task();
+        $task->fill($validated);
         $task->save();
 
-        return to_route('task.manage', ['task' => $task->id])->with('success', 'Задача успешно сохранена');
+        return to_route('task.store', ['task' => $task->id])
+            ->with('success', 'Задача успешно сохранена');
     }
 
     /**
      * Удаление задачи.
      *
      * @param Task $task
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function delete(Task $task)
+    public function delete(Task $task): RedirectResponse
     {
         $task->delete();
 

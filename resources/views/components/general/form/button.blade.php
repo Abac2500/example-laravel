@@ -1,0 +1,1 @@
+<button class="btn btn-primary px-5 py-2" type="submit">{{ $slot }}</button>

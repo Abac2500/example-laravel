@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained((new User())->getTable())->onDelete('cascade');
-            $table->string('name')->nullable();
-            $table->text('text')->nullable();
-            $table->timestamp('expiration_at')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->text('text');
+            $table->timestamp('expiration_at');
             $table->timestamps();
         });
     }

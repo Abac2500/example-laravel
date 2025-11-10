@@ -11,11 +11,12 @@ class TaskPolicy
      * Perform pre-authorization checks.
      *
      * @param User $user
+     * @param string $ability
      * @return bool|null
      */
-    public function before(User $user): bool|null
+    public function before(User $user, string $ability): bool|null
     {
-        if ($user->isAdministrator()) {
+        if ($user->is_administrator) {
             return true;
         }
 

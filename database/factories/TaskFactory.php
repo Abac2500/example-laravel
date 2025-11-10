@@ -17,8 +17,8 @@ class TaskFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'text' => fake()->text(),
+            'name' => fake()->realTextBetween(15, 30),
+            'text' => fake()->realTextBetween(50, 100),
             'expiration_at' => fake()->dateTimeBetween('-2 week', '+2 week')
         ];
     }

@@ -13,8 +13,8 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::factory()
-            ->hasTasks(rand(5, 10))
             ->count(rand(10, 20))
+            ->hasTasks(rand(5, 10))
             ->create();
 
         $user = User::find(1);
